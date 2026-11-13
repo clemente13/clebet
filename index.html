@@ -84,12 +84,13 @@ function ticketText(t){return"CLEBET - Bilhete "+t.codigo+"\nNome: "+t.nome+"\n\
 async function loadGames(){var r=await sb.from("jogos").select("*").order("id");if(r.error){msg="Não foi possível carregar os jogos. Tente de novo em instantes."}else games=r.data}
 async function loadTickets(){if(!me)return;var r=await sb.from("bilhetes").select("*").order("criado_em",{ascending:false}).limit(300);if(r.error)msg="Não foi possível carregar os bilhetes.";else tickets=r.data}
 function canVal(){return!!me&&me.papel==="admin"}
+function fc(n){return Number(n).toFixed(2)}
 function rr(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath()}
 function fit(x,s,w){s=String(s);if(x.measureText(s).width<=w)return s;while(s.length>1&&x.measureText(s+"…").width>w)s=s.slice(0,-1);return s+"…"}
 async function makeImage(t,val){
 try{await document.fonts.load('700 40px "Bricolage Grotesque"');await document.fonts.load('600 40px "IBM Plex Mono"')}catch(e){}
 var logo=await new Promise(function(res){var im=new Image();im.onload=function(){res(im)};im.onerror=function(){res(null)};im.src=LOGO.match(/src="([^"]+)"/)[1]});
-var W=1080,n=t.selecoes.length,H=900+n*110,T=290,L=90,R=W-90;
+var W=1080,n=t.selecoes.length,H=860+n*110,T=290,L=90,R=W-90;
 var c=document.createElement("canvas");c.width=W;c.height=H;var x=c.getContext("2d");
 var gr=x.createLinearGradient(0,0,0,H);gr.addColorStop(0,"#0f5a30");gr.addColorStop(.3,"#06200f");gr.addColorStop(1,"#000");x.fillStyle=gr;x.fillRect(0,0,W,H);
 if(logo){var lh=190,lw=logo.width*lh/logo.height;x.drawImage(logo,(W-lw)/2,50,lw,lh)}
@@ -100,15 +101,14 @@ function ln(yy){x.setLineDash([10,8]);x.strokeStyle="#bdb7a0";x.lineWidth=2;x.be
 tx(t.codigo,L,T+85,"600 56px "+MONO,"#0d4727");
 x.font="500 34px "+SANS;tx(fit(x,"Bilhete de "+t.nome,R-L),L,T+140,"500 34px "+SANS,"#17231b");
 ln(T+170);
-t.selecoes.forEach(function(s,i){var b=T+190+i*110;x.font="700 36px "+SANS;tx(fit(x,s.casa+" x "+s.fora,R-L-170),L,b+40,"700 36px "+SANS,"#17231b");x.font="500 30px "+SANS;tx(fit(x,"Resultado final: "+pe(s),R-L-170),L,b+84,"500 30px "+SANS,"#5d6b61");tx(f(s.cota),R,b+60,"600 44px "+MONO,"#0d4727","right")});
+t.selecoes.forEach(function(s,i){var b=T+190+i*110;x.font="700 36px "+SANS;tx(fit(x,s.casa+" x "+s.fora,R-L-170),L,b+40,"700 36px "+SANS,"#17231b");x.font="500 30px "+SANS;tx(fit(x,"Resultado final: "+pe(s),R-L-170),L,b+84,"500 30px "+SANS,"#5d6b61");tx(fc(s.cota),R,b+60,"600 44px "+MONO,"#0d4727","right")});
 var yR=T+180+n*110;ln(yR);
-tx("Cotação total",L,yR+60,"500 34px "+SANS,"#5d6b61");tx(f(t.cotacao),R,yR+60,"600 38px "+MONO,"#17231b","right");
-tx("Valor apostado",L,yR+120,"500 34px "+SANS,"#5d6b61");tx(f(t.valor)+" fichas",R,yR+120,"600 38px "+MONO,"#17231b","right");
-tx("Prêmio",L,yR+195,"800 44px "+SANS,"#0d4727");tx(f(t.valor*t.cotacao)+" fichas",R,yR+195,"600 48px "+MONO,"#0d4727","right");
+tx("Cotação total",L,yR+60,"500 34px "+SANS,"#5d6b61");tx(fc(t.cotacao),R,yR+60,"600 38px "+MONO,"#17231b","right");
+tx("Valor apostado",L,yR+120,"500 34px "+SANS,"#5d6b61");tx(f(t.valor),R,yR+120,"600 38px "+MONO,"#17231b","right");
+tx("Prêmio",L,yR+195,"800 44px "+SANS,"#0d4727");tx(f(t.valor*t.cotacao),R,yR+195,"600 48px "+MONO,"#0d4727","right");
 ln(yR+230);
 var d=t.confirmado_em?new Date(t.confirmado_em):new Date();
 tx("Confirmado em "+d.toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}),L,yR+290,"600 36px "+SANS,"#17231b");
-tx("Fichas virtuais, sem dinheiro real",W/2,yR+350,"500 26px "+SANS,"#5d6b61","center");
 var blob=await new Promise(function(res){c.toBlob(res,"image/png")});
 if(shot)URL.revokeObjectURL(shot.url);
 shot={blob:blob,url:URL.createObjectURL(blob),code:t.codigo}}
@@ -127,7 +127,7 @@ function slipH(){var t=slipOdd(),h='<aside class="slip"><h2>Seu bilhete</h2>';if
 h+=slip.map(function(s){var g=G(s.g);return'<div class="line"><div>'+esc(g.casa)+' x '+esc(g.fora)+'<br><small>'+esc(pn(g,s.p))+'</small></div><div><b>'+f(o(g,s.p))+'</b><button class="x" data-a="rm" data-g="'+s.g+'" aria-label="Remover jogo">×</button></div></div>'}).join("");
 return h+'<label>Seu nome<input id="nm" value="'+esc(form.name)+'"></label><label>Valor da aposta (fichas)<input id="sk" type="number" min="1" value="'+form.stake+'"></label><div class="tot"><span>Cotação total</span><b>'+f(t)+'</b></div><div class="tot"><span>Retorno possível</span><b id="ret">'+f(t*form.stake)+'</b></div><button class="main" data-a="gen">Gerar bilhete</button></aside>'}
 function tk(t){var s=st(t),c=s==="ganhou"?"ganhou":s==="perdeu"||s==="recusado"?"perdeu":"";return'<div class="ticket" style="margin-bottom:12px"><div class="top"><h3>'+esc(t.codigo)+'</h3><span class="chip '+c+'">'+s+'</span></div><div>'+esc(t.nome)+'</div>'+t.selecoes.map(function(x){return'<div class="line"><span>'+esc(x.casa)+' x '+esc(x.fora)+'</span><span>'+esc(pe(x))+'</span></div>'}).join("")+'<div class="tot"><span>Aposta '+f(t.valor)+' × '+f(t.cotacao)+'</span><b>'+f(t.valor*t.cotacao)+'</b></div>'+(canVal()&&!t.validado&&!t.recusado?'<div class="btns"><button class="sec go" data-a="val" data-c="'+esc(t.codigo)+'">Validar</button><button class="sec" data-a="rej" data-c="'+esc(t.codigo)+'">Recusar</button></div>':'')+(!t.recusado?'<div class="btns"><button class="sec" data-a="img" data-c="'+esc(t.codigo)+'">Gerar imagem</button></div>':'')+'</div>'}
-function ready(){var t=last;if(!t)return"";return'<div class="box"><h2>Bilhete gerado</h2><p>Envie este texto ao administrador para ele validar:</p><div class="code">'+esc(t.codigo)+'</div><textarea id="tt" readonly rows="11">'+esc(ticketText(t))+'</textarea><button class="main" data-a="copy">Copiar bilhete</button><button class="sec" style="margin-top:8px;width:100%" data-a="new">Fazer novo bilhete</button></div>'}
+function ready(){var t=last;if(!t)return"";return'<div class="box"><h2>Bilhete gerado</h2><p>Envie este código ao administrador para ele validar:</p><div class="code">'+esc(t.codigo)+'</div><input id="tt" readonly value="'+esc(t.codigo)+'" aria-label="Código do bilhete" style="position:absolute;left:-9999px;opacity:0"><button class="main" data-a="copy">Copiar bilhete</button><button class="sec" style="margin-top:8px;width:100%" data-a="new">Fazer novo bilhete</button></div>'}
 function list(){return loading?'<p class="mut">Carregando jogos…</p>':games.length?games.map(game).join(""):'<p class="mut">Nenhum jogo disponível no momento.</p>'}
 function pub(){var h=msg?'<div class="banner" role="status">'+msg+'</div>':'';if(tab==="pronto")return h+ready();return h+'<div class="grid"><div>'+list()+'</div>'+slipH()+'</div>'}
 function adm(){var h=tabs(me.papel==="admin"?[["validar","Validar"],["novo","Novo bilhete"],["bilhetes","Bilhetes"],["jogos","Jogos"],["users","Usuários"]]:[["validar","Buscar bilhete"],["novo","Novo bilhete"],["bilhetes","Bilhetes"]]);
@@ -138,14 +138,14 @@ if(tab==="bilhetes")return h+(tickets.length?tickets.map(tk).join(""):'<p class=
 if(tab==="jogos"&&me.papel==="admin")return h+'<div class="box"><h3>Criar evento</h3><div class="row"><label>Campeonato<input id="e-l"></label><label>Time da casa<input id="e-h"></label><label>Time de fora<input id="e-a"></label></div><div class="row"><label>Cotação casa<input id="e-1" inputmode="decimal"></label><label>Cotação empate<input id="e-x" inputmode="decimal"></label><label>Cotação fora<input id="e-2" inputmode="decimal"></label></div><button class="main" data-a="add">Adicionar evento</button></div>'+games.map(function(g){return'<article class="game"><div class="meta">'+esc(g.campeonato)+'</div><h3>'+esc(g.casa)+' x '+esc(g.fora)+'</h3>'+(g.resultado!=null?'<p class="mut">Resultado: '+(g.resultado==="X"?"empate":"vitória de "+esc(pn(g,g.resultado)))+'</p>':'<div class="btns"><span class="mut">Registrar resultado:</span>'+["1","X","2"].map(function(p){return'<button class="sec" data-a="res" data-g="'+g.id+'" data-p="'+p+'">'+esc(pn(g,p))+'</button>'}).join("")+'</div>')+'</article>'}).join("");
 if(tab==="users"&&me.papel==="admin")return h+'<div class="box"><h3>Criar usuário</h3><p class="mut">Quem receber acesso pode criar e validar bilhetes.</p><div class="row"><label>Nome<input id="u-n"></label><label>E-mail<input id="u-e" type="email" autocapitalize="none"></label><label>Senha (mín. 8 caracteres)<input id="u-p"></label><label>Nível<select id="u-r"><option value="validador">Validador: cria bilhetes e gera imagens</option><option value="admin">Administrador: acesso total</option></select></label></div><button class="main" data-a="uadd">Criar usuário</button></div><div class="box"><h3>Usuários</h3>'+users.map(function(u){return'<div class="rk"><span>'+esc(u.nome)+' ('+esc(u.email||"sem e-mail")+", "+(u.papel==="admin"?"administrador":"validador")+')</span>'+(u.id===me.id?'<span class="mut">você</span>':'<span class="btns"><button class="sec" data-a="upap" data-u="'+esc(u.id)+'" data-p="'+(u.papel==="admin"?"validador":"admin")+'">'+(u.papel==="admin"?"Tornar validador":"Tornar administrador")+'</button><button class="sec" data-a="udel" data-u="'+esc(u.id)+'">Remover</button></span>')+'</div>'}).join("")+'</div>';
 return h}
-function render(){var b=me?adm():view==="alogin"?alogin():pub();$("#app").innerHTML=head()+(me?'<div class="acct">Conectado como <b>'+esc(me.email)+'</b> ('+(me.papel==="admin"?"administrador":"validador")+')</div>':'')+'<div class="wrap">'+b+'<p class="mut foot">Clebet é um jogo entre amigos com fichas virtuais. Não há depósito, saque nem dinheiro real.</p></div>'}
+function render(){var b=me?adm():view==="alogin"?alogin():pub();$("#app").innerHTML=head()+(me?'<div class="acct">Conectado como <b>'+esc(me.email)+'</b> ('+(me.papel==="admin"?"administrador":"validador")+')</div>':'')+'<div class="wrap">'+b+'</div>'}
 
 document.addEventListener("input",function(e){if(e.target.id==="nm")form.name=e.target.value;if(e.target.id==="sk"){form.stake=Math.max(0,parseFloat(e.target.value)||0);var r=$("#ret");if(r)r.textContent=f(slipOdd()*form.stake)}});
 document.addEventListener("keydown",function(e){if(e.key!=="Enter")return;if(e.target.id==="lp"||e.target.id==="lu")document.querySelector('[data-a="login"]').click();if(e.target.id==="fc")document.querySelector('[data-a="find"]').click()});
 function num(id){return parseFloat(($(id).value||"").replace(",","."))}
-function copyIt(txt){var ok=function(){msg="Bilhete copiado.";render()},fb=function(){var ta=$("#tt");ta.select();var r=false;try{r=document.execCommand("copy")}catch(e){}if(r)ok();else{msg="Não deu para copiar sozinho. Toque no texto acima, selecione tudo e escolha Copiar.";render()}};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(ok,fb);else fb()}
+function copyIt(txt){var ok=function(){msg="Código copiado.";render()},fb=function(){var ta=$("#tt");ta.select();var r=false;try{r=document.execCommand("copy")}catch(e){}if(r)ok();else{msg="Não deu para copiar sozinho. Toque no código acima, segure e escolha Copiar.";render()}};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(ok,fb);else fb()}
 document.addEventListener("click",async function(e){var b=e.target.closest("[data-a]");if(!b||busy)return;var a=b.dataset.a,d=b.dataset;
-if(a==="copy"){copyIt(ticketText(last));return}
+if(a==="copy"){copyIt(last.codigo);return}
 if(a==="share"){await shareImg();return}
 if(a==="dl"){dlImg();return}
 msg="";busy=true;
